@@ -1,8 +1,10 @@
 package com.eduardo.authapi.controllers;
 
 import com.eduardo.authapi.domain.user.AuthenticationDTO;
+import com.eduardo.authapi.domain.user.LoginResponseDTO;
 import com.eduardo.authapi.domain.user.RegisterDTO;
 import com.eduardo.authapi.domain.user.User;
+import com.eduardo.authapi.infra.TokenService;
 import com.eduardo.authapi.repositories.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,12 +25,17 @@ public class AuthenticationController {
     private AuthenticationManager authenticationManager;
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    TokenService tokenService;
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody @Valid AuthenticationDTO data){
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.login(),data.password());
         var auth = this.authenticationManager.authenticate(usernamePassword);
 
-        return ResponseEntity.ok().build();
+        var token = tokenService.generateToken((User) auth.getPrincipal());
+
+        return ResponseEntity.ok(new LoginResponseDTO(token));
     }
 
     @PostMapping("/register")
